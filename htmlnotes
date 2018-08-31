@@ -1,0 +1,51 @@
+# tech
+Html notes
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Untitled Document</title>
+</head>
+
+<body>
+<article>
+  <header>
+    <h1>Most important heading here</h1>
+    <h3>Less important heading here</h3>
+    <p>Some additional information here.</p>
+  </header>
+  <p>Lorem Ipsum dolor set amet....</p>
+</article>
+
+<center> <table style="width:100%";bgcolor="black" ;border="67" ;width="6"; bordercolorlight="#000000">
+<!hee
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+table {
+    border-spacing: 5px;
+} ><tr><head><h1 style="color:red;">Sensors</h1></head></tr>
+<tr>
+    <th>Name</th>
+    <th colspan="2">Telephone</th>
+  </tr>
+  <tr>
+    <td>Bill Gates</td>
+    <td colspan="8">55577854</td>
+    <td>55577855</td>
+  </tr>
+  <table id="t01">
+  <tr>
+    <th>Firstname</th>
+    <th>Lastname</th> 
+    <th>Age</th>
+  </tr>
+  <tr>
+    <td>Eve</td>
+    <td>Jackson</td> 
+    <td>94</td>
+  </tr>
+</table>
+</body>
+</html>
