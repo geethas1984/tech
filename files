@@ -1,0 +1,2799 @@
+File structures Lab Programs  - Geetha .S Record copy
+Program 1 : string  Reverse  
+
+#include<iostream> 
+#include<string> 
+#include<fstream> 
+using namespace std; 
+int main() 
+{ 
+char s1[25]; 
+fstream file1,file2; 
+int i=0,j=0,x=0,c=0,kb=0; 
+char filename1[25],filename2[25]; 
+cout<<endl<<"1.for standard i/o:"<<endl<<"2 for file i/o:"<<endl<<"enter your choice"; 
+cin>>kb; 
+switch(kb) 
+{ 
+ case 1:cout<<"enter name count:"; 
+        cin>>c; 
+        for(j=1;j<=c;j++) 
+        { 
+       cout<<endl<<"entername"<<j<<":"; 
+       cin>>s1; 
+       x=strlen(s1); 
+       cout<<"reverse name"<<j<<":"; 
+       for(i=x-1;i>=0;i--) 
+       cout<<s1[i]; 
+       cout<<endl; 
+       } 
+       break; 
+ case 2:cout<<"enter data file name:"; 
+        cin>>filename1; 
+        cout<<"enter reverse data filename2"; 
+        cin>>filename2; 
+        file1.open(filename1,ios::in); 
+        file2.open(filename2,ios::out); 
+        while(1) 
+        { 
+      file1.getline(s1,25); 
+      if(file1.fail()) 
+        break; 
+      x=strlen(s1); 
+      for(i=x-1;i>=0;i--) 
+       file2<<s1[i]; 
+       file2<<endl; 
+       } 
+         file1.close(); 
+         file2.close(); 
+     break; 
+   } 
+ return 1; 
+} 
+  
+OUTPUT :
+
+//try for these also
+
+I/O redirection > cat vi.txt|sort>f1.txt
+ Piping   >cat v1.txt|sort
+
+
+PROGRAM 2 : Fixed length records
+Fixed-Length Records
+1.	Consider a file of deposit records of the form:
+2.	 aaaaaaaaaaaa¯type deposit = record
+3.	
+4.			 		 		 		 bname : char(22);
+5.	
+6.			 		 		 		 account# : char(10);
+7.	
+8.			 		 		 		 balance : real;
+9.	
+10.			 		 end
+11.	
+o	If we assume that each character occupies one byte, an integer occupies 4 bytes, and a real 8 bytes, our deposit record is 40 bytes long.
+o	The simplest approach is to use the first 40 bytes for the first record, the next 40 bytes for the second, and so on.
+o	However, there are two problems with this approach.
+o	It is difficult to delete a record from this structure.
+o	Space occupied must somehow be deleted, or we need to mark deleted records so that they can be ignored.
+o	Unless block size is a multiple of 40, some records will cross block boundaries.
+o	It would then require two block accesses to read or write such a record.
+12.	When a record is deleted, we could move all successive records up one (Figure 10.7), which may require moving a lot of records.
+o	We could instead move the last record into the ``hole'' created by the deleted record (Figure 10.8).
+o	This changes the order the records are in.
+o	It turns out to be undesirable to move records to occupy freed space, as moving requires block accesses.
+o	Also, insertions tend to be more frequent than deletions.
+o	It is acceptable to leave the space open and wait for a subsequent insertion.
+o	This leads to a need for additional structure in our file design.
+13.	So one solution is:
+o	At the beginning of a file, allocate some bytes as a file header.
+o	This header for now need only be used to store the address of the first record whose contents are deleted.
+o	This first record can then store the address of the second available record, and so on (Figure 10.9).
+o	To insert a new record, we use the record pointed to by the header, and change the header pointer to the next available record.
+o	If no deleted records exist we add our new record to the end of the file.
+14.	Note: Use of pointers requires careful programming. If a record pointed to is moved or deleted, and that pointer is not corrected, the pointer becomes a dangling pointer. Records pointed to are calledpinned.
+15.	Fixed-length file insertions and deletions are relatively simple because ``one size fits all''. For variable length, this is not the case.
+
+
+#include<iostream> 
+#include<fstream> 
+#include<sstream> 
+#include<string> 
+using namespace std; 
+class student 
+{ 
+ public: 
+     string usn,name,branch,buffer; 
+   int semester; 
+  void read(); 
+   void pack(); 
+  void write(); 
+  void unpack(); 
+  int search(string); 
+ int del(string); 
+ void modify(string); 
+ }; 
+int main() 
+{ 
+ int count,choice,len,i; 
+ student s; 
+  string key; 
+  cout<<"\n1.add record\n2.delete record\n3.modify\n4.search\n"; 
+  cin>>choice; 
+  switch(choice) 
+{ 
+  case 1:cout<<"how many record?\n"; 
+         cin>>count; 
+          for(i=0;i<count;i++) 
+           { 
+              cout<<"data"; 
+              s.read(); 
+              s.pack(); 
+            } 
+          s.write(); 
+         break; 
+   case 2:cout<<"enter the key\n"; 
+          cin>>key; 
+          i=s.del(key); 
+          break; 
+   case 3:cout<<"enter the key\n"; 
+          cin>>key; 
+           s.modify(key); 
+          break; 
+   case 4:cout<<"enter the usn\n"; 
+          cin>>key; 
+         i=s.search(key); 
+          break; 
+   default:cout<<"error"; 
+   } 
+ return 0; 
+} 
+void student::read() 
+{ 
+ cout<<"usn"; 
+cin>>usn; 
+cout<<"name"; 
+cin>>name; 
+cout<<"branch"; 
+cin>>branch; 
+cout<<"semester"; 
+cin>>semester; 
+} 
+ void student::pack() 
+{ 
+ string sem,temp; 
+ stringstream out; 
+ out<<semester; 
+ sem=out.str(); 
+  temp.erase(); 
+ temp+=usn+'|'+name+'|'+branch+'|'+sem; 
+  for(;temp.size()<100;) 
+   { 
+ temp+='$'; 
+ } 
+ buffer+=temp+'\n'; 
+} 
+
+void student::write() 
+{ 
+ fstream file; 
+ file.open("2a.txt",ios::out|ios::app); 
+ file<<buffer; 
+ file.close(); 
+} 
+ int student::search(string key) 
+ { 
+ fstream file; 
+ int flag=0,pos=0; 
+ file.open("2a.txt",ios::in); 
+ while(!file.eof()) 
+{ 
+ buffer.erase(); 
+ getline(file,buffer); 
+ unpack(); 
+ if(key==usn) 
+{ 
+ flag=1; 
+ cout<<"found the record is:\n"<<buffer; 
+ pos=file.tellg(); 
+ cout<<"\npos="<<pos; 
+ return pos; 
+ } 
+ } 
+if(!flag) 
+  cout<<"record not found"; 
+ return pos; 
+} 
+ void student::unpack() 
+{ 
+ string sem; 
+ int ch=1,i=0; 
+ usn.erase(); 
+ while(buffer[i]!='|') 
+ usn+=buffer[i++]; 
+ 
+} 
+int student::del(string key) 
+ { 
+ fstream file; 
+ char del_mark='*',t; 
+ int pos=0,flag=0; 
+ pos=search(key); 
+ if(pos) 
+{ 
+ file.open("2a.txt"); 
+  pos-=101; 
+file.seekp(pos,ios::beg); 
+file.put(del_mark); 
+flag=1; 
+} 
+file.close(); 
+if(!flag) return 0; 
+ else 
+ return 1; 
+} 
+ void student::modify(string key) 
+{ 
+ int choice; 
+ if(del(key)) 
+{ 
+ cout<<"want to modify?\n1.usn 2.name 3.branch 4.semester\nenter u r choice\n"; 
+ cin>>choice; 
+ switch(choice) 
+{ 
+ case 1:cout<<"usn"; 
+        cin>>usn; 
+         break; 
+ case 2:cout<<"name"; 
+        cin>>name; 
+        break; 
+  case 3:cout<<"branch"; 
+         cin>>branch; 
+         break; 
+ case 4:cout<<"semester"; 
+        cin>>semester; 
+         break; 
+ default:cout<<"wrong choice"; 
+} 
+ buffer.erase(); 
+ pack(); 
+ write(); 
+} 
+} 
+                   
+
+  
+
+PROGRAM 3 – variable  length records
+•	Variable-length records - the length of each record varies
+Using variable-length records might enable you to save disk space. When you use fixed-length records, you need to make the record length equal to the length of the longest record. If your application generates many short records with occasional long ones, using fixed-length records wastes a lot of disk space, so variable-length records would be a better choice.
+The type of record is determined as follows:
+To use:	Specify the clause:
+Variable-length records	RECORDING MODE IS V
+Fixed-length records	RECORDING MODE IS F
+Otherwise:
+To use:	Specify the clause:
+variable length records	RECORD IS VARYING
+fixed length records	RECORD CONTAINS n CHARACTERS
+Otherwise:
+To use:	Specify the Compiler directive:
+variable length records	RECMODE"V"
+fixed length records	RECMODE"F"
+Otherwise, to use variable length records, specify the RECMODE"OSVS" Compiler directive plus one of the following:
+•	RECORD CONTAINS n TO m CHARACTERS
+•	More than one record area of different lengths
+
+
+
+#include<iostream> 
+#include<fstream> 
+#include<sstream> 
+#include<string> 
+using namespace std; 
+class student 
+{ 
+ public: 
+  string usn,name,branch,buffer; 
+int semester; 
+ void read(); 
+ void pack(); 
+ void write(); 
+ void unpack(); 
+int search(string); 
+int del(string); 
+void modify(string); 
+}; 
+int main() 
+{ 
+ int count,choice,sem,i; 
+student s; 
+ string key; 
+cout<<"\n1.add record\n2.delete record\n3.modify\n4.search\nenter ur choice:"; 
+cin>>choice; 
+ switch(choice) 
+{ 
+ case 1:cout<<"how many record?\n"; 
+        cin>>count; 
+        for(i=0;i<count;i++) 
+            { 
+        cout<<"data;"; 
+        s.read(); 
+        s.pack(); 
+             } 
+              s.write(); 
+             break; 
+ case 2:cout<<"enter the key\n"; 
+        cin>>key; 
+        i=s.del(key); 
+        break; 
+ case 3:cout<<"enter the key\n"; 
+        cin>>key; 
+        s.modify(key); 
+        break; 
+ case 4:cout<<"enter the usn"; 
+        cin>>key; 
+        i=s.search(key); 
+        break; 
+ default:cout<<"\nerror"; 
+ } 
+ return 0; 
+} 
+ void student::read() 
+{ 
+ cout<<"usn"; 
+ cin>>usn; 
+ cout<<"name"; 
+ cin>>name; 
+ cout<<"branch"; 
+ cin>>branch; 
+ cout<<"semester"; 
+ cin>>semester; 
+} 
+ void student::pack() 
+{ 
+ string sem; 
+ stringstream out; 
+ out<<semester; 
+ sem=out.str(); 
+ buffer+=usn+'|'+name+'|'+branch+'|'+sem+'$'+'\n'; 
+ } 
+
+int student::del(string key) 
+{ 
+ fstream file; 
+char del_mark='*',t; 
+int pos,flag=0; 
+pos=search(key); 
+if(pos) 
+{ 
+ file.open("3b.txt"); 
+pos=pos-(buffer.size()+1); 
+ file.seekp(pos,ios::beg); 
+ file.put('*'); 
+ flag=1; 
+file.close(); 
+return 1; 
+} 
+if(!flag) 
+{ 
+cout<<"\nunsucessful deletion"; 
+   return 0; 
+} 
+} 
+int student::search(string key) 
+{ 
+ fstream file; 
+ int flag=0,pos=0; 
+ file.open("3b.txt",ios::in); 
+ while(!file.eof()) 
+{ 
+buffer.erase(); 
+getline(file,buffer); 
+unpack(); 
+if(key==usn) 
+{ 
+ cout<<"\nfound key,the record is\n"<<buffer; 
+flag=1; 
+pos=file.tellg(); 
+file.close(); 
+return pos; 
+} 
+} 
+if(!flag) 
+{ 
+cout<<("\nrecord not found\n"); 
+file.close(); 
+return 0; 
+} 
+} 
+ void student::unpack() 
+{ 
+ string sem; 
+int ch=1,i=0; 
+ usn.erase(); 
+ while(buffer[i]!='|') 
+ usn+=buffer[i++]; 
+ 
+} 
+void student::modify(string key) 
+{ 
+ int choice; 
+if(del(key)==1) 
+{ 
+cout<<"\nwhat to modify?\n1.usn 2.name 3.branch 4.sem\n"; 
+cout<<"enter ur choice:"; 
+cin>>choice; 
+switch(choice) 
+{ 
+ case 1:cout<<"usn\n"; 
+        cin>>usn; 
+        break; 
+case 2:cout<<"name\n"; 
+        cin>>name; 
+        break; 
+case 3:cout<<"branch\n"; 
+       cin>>branch; 
+       break; 
+case 4:cout<<"semester\n"; 
+       cin>>semester; 
+       break; 
+ default:cout<<"wrong choice"; 
+} 
+ buffer.erase(); 
+pack(); 
+write(); 
+cout<<"\nmodification sucess\n"; 
+} 
+else 
+   cout<<"\nmodification unsucessful\n"; 
+} 
+ void student::write() 
+{ 
+ fstream file; 
+ file.open("3b.txt",ios::out|ios::app); 
+file<<buffer; 
+file.close(); 
+} 
+
+
+PROGRAM 4 : RRN
+_RIOFB_T *_Rreadd (_RFILE *fp, void *buf, size_t size,
+                            int opts, long rrn);
+Language Level: ILE C Extension
+Threadsafe: Yes. However, if the file pointer is passed among threads, the I/O feedback area is shared among those threads.
+Description
+ The _Rreadd() function reads the record that is specified by rrn in the arrival sequence access path for the file that is associated with fp. If the file is opened for updating, the _Rreadd() function locks the record specified by the rrn unless __NO_LOCK is specified. If the file is a keyed file, the keyed access path is ignored. Up to size number of bytes are copied from the record into buf (move mode only). 
+The following parameters are valid for the _Rreadd() function.
+buf
+Points to the buffer where the data that is read is to be stored. If locate mode is used, this parameter must be set to NULL.
+size
+Specifies the number of bytes that are to be read and stored in buf. If locate mode is used, this parameter is ignored.
+rrn
+The relative record number of the record to be read.
+opts
+Specifies the processing and access options for the file. The possible options are:
+__DFT
+If the file is opened for updating, then the record being read is locked for update. The previously locked record will no longer be locked.
+__NO_LOCK
+Does not lock the record being positioned to.
+The _Rreadd() function is valid for database, DDM and display (subfiles) files.
+Return Value
+The _Rreadd() function returns a pointer to the _RIOFB_T structure associated with fp. If the _Rreadd() operation is successful the num_bytesfield is set to the number of bytes transferred from the system buffer to the user's buffer (move mode) or the record length of the file (locate mode). If blkrcd=Y and riofb=Y are specified, the blk_count and the blk_filled_by fields of the _RIOFB_T structure are updated. The key andrrn fields are also updated. If the file associated with fp is a display file, the sysparm field is updated. If it is unsuccessful, the num_bytesfield is set to a value less than size and errno will be changed.
+The value of errno may be set to:
+Value
+Meaning
+ENOTREAD
+The file is not open for read operations.
+ETRUNC
+Truncation occurred on an I/O operation.
+EIOERROR
+A non-recoverable I/O error occurred.
+EIORECERR
+A recoverable I/O error occurred.
+See Table 12 and Table 14 for errno settings.
+Example that uses _Rreadd()
+#include <stdio.h>
+#include <stdlib.h>
+#include <recio.h>
+ 
+int main(void)
+{
+    _RFILE      *fp;
+    _XXOPFB_T   *opfb;
+ 
+    /* Open the file for processing in arrival sequence.             */
+    if (( fp = _Ropen ( "MYLIB/T1677RD1", "rr+, arrseq=Y" )) == NULL )
+    {
+        printf ( "Open failed\n" );
+        exit ( 1 );
+    }
+ 
+    /* Get the library and file names of the file opened.            */
+    opfb = _Ropnfbk ( fp );
+    printf ( "Library: %10.10s\nFile:    %10.10s\n",
+              opfb->library_name,
+              opfb->file_name);
+ 
+    /* Get the second record.                                        */
+    _Rreadd ( fp, NULL, 20, __DFT, 2 );
+    printf ( "Second record: %10.10s\n", *(fp->in_buf) );
+ 
+    _Rclose ( fp );
+}
+Related Information
+•	_Rreadf() — Read the First Record
+•	_Rreadindv() — Read from an Invited Device
+•	_Rreadk() — Read a Record by Key
+•	_Rreadl() — Read the Last Record
+•	_Rreadn() — Read the Next Record
+•	_Rreadnc() — Read the Next Changed Record in a Subfile
+•	_Rreadp() — Read the Previous Record
+•	_Rreads() — Read the Same Record
+
+
+#include<iostream> 
+#include<sstream> 
+#include<fstream> 
+#include<string> 
+using namespace std; 
+class student 
+{ 
+ public:string usn,name,branch,buffer; 
+        int semester,count,rrn_list[100]; 
+        void read(); 
+        void write(); 
+        void pack(); 
+        void unpack(); 
+        void create_rrn(); 
+        void search_by_rrn(int); 
+}; 
+void student::read() 
+{ 
+ cout<<"usn"; 
+ cin>>usn; 
+ cout<<"name"; 
+ cin>>name; 
+ cout<<"branch"; 
+ cin>>branch; 
+ cout<<"sem"; 
+ cin>>semester; 
+} 
+void student::pack() 
+{ 
+ string sem; 
+ stringstream out; 
+ out<<semester; 
+ sem=out.str(); 
+ buffer.erase(); 
+ buffer=usn+'|'+name+'|'+branch+'|'+sem+'|'+'$'+'\n'; 
+} 
+void student::write() 
+{ 
+ int pos; 
+ fstream file; 
+ file.open("4.txt",ios::out|ios::app); 
+ pos=file.tellp(); 
+ file<<buffer; 
+ file.close(); 
+ rrn_list[++count]=pos; 
+} 
+void student::create_rrn() 
+{ 
+ fstream file; 
+ int pos; 
+ count=0; 
+ file.open("4.txt",ios::in); 
+ while(!file.eof()) 
+ { 
+  pos=file.tellg(); 
+  buffer.erase(); 
+  getline(file,buffer); 
+  if(buffer.empty())continue; 
+  rrn_list[++count]=pos; 
+ } 
+ file.close(); 
+} 
+void student::search_by_rrn(int rrn) 
+{ 
+ int pos=-1; 
+ fstream file; 
+ if(rrn>count) 
+ cout<<"record not found\n"; 
+ else 
+ { 
+ buffer.erase(); 
+ file.open("4.txt"); 
+ pos=rrn_list[rrn]; 
+ file.seekp(pos,ios::beg); 
+ getline(file,buffer); 
+ cout<<"\nrecord is..."<<buffer<<"\n"; 
+ } 
+} 
+int main() 
+{ 
+ int ch,rrn; 
+ student s; 
+ s.create_rrn(); 
+ while(1) 
+ { 
+  cout<<"\n1.add  2.search  3.exit\n enter your choice\n"; 
+  cin>>ch; 
+  switch(ch) 
+  { 
+   case 1:cout<<"enter data\n"; 
+          s.read(); 
+          s.pack(); 
+          s.write(); 
+          break; 
+   case 2:cout<<"enter the rrn\n"; 
+          cin>>rrn; 
+          s.search_by_rrn(rrn); 
+          break; 
+   default:exit(0); 
+  } 
+ } 
+  return 0; 
+
+} 
+ 
+PROGRAM 5 :Primary key indexing
+Types of Single-Level Indexes  Primary Index  Defined on an ordered data file  The data file is ordered on a key field  Includes one index entry for each block in the data file; the index entry has the key field value for the first record in the block, which is called the block anchor  A primary index is a nondense (sparse) index, since it includes an entry for each disk block of the data file and the keys of its anchor record rather than for every search value. Primary index on t
+
+
+#include<iostream> 
+#include<sstream> 
+#include<fstream> 
+#include<string> 
+using namespace std; 
+
+class primary_index 
+{ 
+ public:string usn_list[100]; 
+        int address_list[100],count; 
+        void create_p_index(); 
+        void insert(); 
+        void remove(string); 
+        void search(string); 
+        int search_primary_index(string); 
+        string extract_usn(string); 
+        void sort_primary_index(); 
+}; 
+void primary_index::create_p_index() 
+{ 
+ fstream file; 
+ int pos; 
+ string buffer,usn; 
+ count=-1; 
+ file.open("5.txt",ios::in); 
+ while(!file.eof()) 
+ { 
+  pos=file.tellg(); 
+  buffer.erase(); 
+  getline(file,buffer); 
+  if(buffer.empty()) break; 
+  usn=extract_usn(buffer); 
+  if(usn[0]=='*')continue; 
+  ++count; 
+  usn_list[count]=usn; 
+  address_list[count]=pos; 
+ } 
+ file.close(); 
+ sort_primary_index(); 
+} 
+void primary_index::sort_primary_index() 
+{ 
+ int i,j,temp_address; 
+ string temp_usn; 
+ for(i=0;i<=count;i++) 
+ { 
+  for(j=i+1;j<=count;j++) 
+  { 
+   if(usn_list[i]>usn_list[j]) 
+   { 
+    temp_usn=usn_list[i]; 
+    usn_list[i]=usn_list[j]; 
+    usn_list[j]=temp_usn; 
+    temp_address=address_list[i]; 
+    address_list[i]=address_list[j]; 
+    address_list[i]=temp_address; 
+   } 
+  } 
+ } 
+} 
+string primary_index::extract_usn(string buffer) 
+{ 
+ string usn; 
+ int i=0; 
+ usn.erase(); 
+ while(buffer[i]!='|') 
+ usn+=buffer[i++]; 
+ return usn; 
+} 
+void primary_index::insert() 
+{ 
+ string usn,name,branch,sem,buffer; 
+ int semester,address,pos; 
+ fstream file; 
+ cout<<"\nusn"; 
+ cin>>usn; 
+ cout<<"\nname"; 
+ cin>>name; 
+ cout<<"\nbranch"; 
+ cin>>branch; 
+ cout<<"\nsem"; 
+ cin>>semester; 
+ stringstream out; 
+ out<<semester; 
+ sem=out.str(); 
+ buffer.erase(); 
+ buffer=usn+'|'+name+'|'+branch+'|'+sem+'$'+'\n'; 
+ file.open("5.txt",ios::out|ios::app); 
+ pos=file.tellp(); 
+ file<<buffer; 
+ file.close(); 
+ count++; 
+ usn_list[count]=usn; 
+ address_list[count]=pos; 
+ sort_primary_index(); 
+} 
+int primary_index::search_primary_index(string key) 
+{ 
+ int low=0,high=count,mid=0,flag=0,pos; 
+ while(low<=high) 
+ { 
+ mid=(low+high)/2; 
+ if(usn_list[mid]==key) 
+ { 
+  flag=1; 
+  break; 
+ } 
+ if(usn_list[mid]>key) 
+ high=mid-1; 
+ if(usn_list[mid]<key) 
+ low=mid+1; 
+ } 
+ if(flag==1)return mid; 
+ else return -1; 
+} 
+void primary_index::search(string key) 
+{ 
+ int pos=0,address; 
+ string buffer; 
+ fstream file; 
+ buffer.erase(); 
+ pos=search_primary_index(key); 
+ if(pos>=0) 
+ { 
+  file.open("5.txt"); 
+  address=address_list[pos]; 
+  file.seekp(address,ios::beg); 
+  getline(file,buffer); 
+  cout<<"record found...\n"<<buffer; 
+  file.close(); 
+ } 
+ else cout<<"record not found\n"; 
+} 
+void primary_index::remove(string key) 
+{ 
+ int pos=0,address,i; 
+ char del_ch='*'; 
+ fstream file; 
+ pos=search_primary_index(key); 
+ if(pos>=0) 
+ { 
+  file.open("5.txt"); 
+  address=address_list[pos]; 
+  file.seekp(address,ios::beg); 
+  file.put(del_ch); 
+  cout<<"record deleted"; 
+  file.close(); 
+  for(i=pos;i<count;i++) 
+  { 
+   usn_list[i]=usn_list[i+1]; 
+   address_list[i]=address_list[i+1]; 
+  } 
+ count--; 
+ } 
+else cout<<"record to be deleted is not found"; 
+} 
+int main() 
+{ 
+ int ch; 
+ string key; 
+ primary_index i1; 
+ i1.create_p_index(); 
+ while(1) 
+ { 
+  cout<<"\n1.add  2.search 3.delete  4.exit\n"; 
+  cout<<"enter your choice"; 
+  cin>>ch; 
+  switch(ch) 
+  { 
+   case 1:cout<<"enter the data"; 
+          i1.insert(); 
+	  break; 
+   case 2:cout<<"\nenter the usn to be searched"; 
+          cin>>key; 
+          i1.search(key); 
+          break; 
+  case 3:cout<<"\nenter the usn to be deleted"; 
+         cin>>key; 
+         i1.remove(key); 
+         break; 
+  default:exit(0); 
+  } 
+ } 
+ return 0; } 
+
+PROGRAM 6 – Secondary key indexing
+
+Secondary indexes
+A secondary index, put simply, is a way to efficiently access records in a database (the primary) by means of some piece of information other than the usual (primary) key. In Berkeley DB, this index is simply another database whose keys are these pieces of information (the secondary keys), and whose data are the primary keys. Secondary indexes can be created manually by the application; there is no disadvantage, other than complexity, to doing so. However, when the secondary key can be mechanically derived from the primary key and datum that it points to, as is frequently the case, Berkeley DB can automatically and transparently manage secondary indexes.
+As an example of how secondary indexes might be used, consider a database containing a list of students at a college, each of whom has a unique student ID number. A typical database would use the student ID number as the key; however, one might also reasonably want to be able to look up students by last name. To do this, one would construct a secondary index in which the secondary key was this last name.
+
+
+#include<iostream>
+#include<fstream>
+#include<sstream>
+#include<string>
+using namespace std;
+
+class secondary_index
+{
+public:
+string name_list[100];
+int add_list[100],count;
+void create_index();
+void insert();
+void remove(string);
+void del(int);
+void search(string);
+int search_index(string);
+void read(int);
+string extract_name(string);
+void sort_index();
+};
+
+void secondary_index::create_index()
+{
+fstream file;
+int pos;
+string buffer,name;
+count=-1;
+file.open("6.txt",ios::in);
+while(!file.eof())
+{
+pos=file.tellg();
+buffer.erase();
+getline(file,buffer);
+if(buffer.empty()) continue;
+if(buffer[0]!='*')
+{
+name=extract_name(buffer);
+count++;
+name_list[count]=name;
+add_list[count]=pos;
+}
+}
+file.close();
+sort_index();
+buffer.erase();
+}
+
+string secondary_index::extract_name(string buffer)
+{
+string usn,name;
+int i=0;
+
+usn.erase();
+while(buffer[i]!='|')
+usn+=buffer[i++];
+
+name.erase();
+i++;
+while(buffer[i]!='|')
+name+=buffer[i++];
+return name;
+}
+
+void secondary_index::sort_index()
+{
+int i,j,temp;
+string temp_name;
+for(i=0;i<count;i++)
+{
+for(j=i+1;j<=count;j++)
+{
+if(name_list[i]>name_list[j])
+{
+temp_name=name_list[i];
+name_list[i]=name_list[j];
+name_list[j]=temp_name;
+temp=add_list[i];
+add_list[i]=add_list[j];
+add_list[j]=temp;
+}}}}
+
+void secondary_index::insert()
+{
+string usn,name,branch,sem,buffer;
+int semester,pos;
+fstream file;
+cout<<"\nusn";
+cin>>usn;
+cout<<"\n name";
+cin>>name;
+cout<<"\n branch";
+cin>>branch;
+cout<<"\n semester";
+cin>>semester;
+stringstream out;
+out<<semester;
+sem=out.str();
+
+buffer=usn+'|'+name+'|'+branch+'|'+sem+'$'+'\n';
+file.open("6.txt",ios::out|ios::app);
+pos=file.tellp();
+file<<buffer;
+file.close();
+
+count++;
+name_list[count]=name;
+add_list[count]=pos;
+sort_index();
+}
+
+int secondary_index::search_index(string key)
+{
+int i;
+for(i=0;i<=count;i++)
+{
+if(name_list[i]==key)
+return i;
+}
+return -1;
+}
+
+void secondary_index::search(string key)
+{
+int pos=0,t;
+string buffer;
+buffer.erase();
+pos=search_index(key);
+if(pos>=0)
+{
+t=pos;
+while(t<=count && name_list[t]==key)
+{
+read(t);
+t++;
+}
+}
+else
+cout<<"\nrecord not found";
+}
+
+void secondary_index::read(int pos)
+{
+int add;
+string buffer;
+fstream file;
+file.open("6.txt");
+add=add_list[pos];
+file.seekp(add,ios::beg);
+getline(file,buffer);
+cout<<"\nfound record......."<<buffer;
+file.close();
+}
+
+void secondary_index::remove(string key)
+{
+int pos=0,t,ch,i,flag=0;
+string buffer;
+buffer.erase();
+pos=search_index(key);
+if(pos>=0)
+{
+t=pos;
+while(t<=count && name_list[t]==key)
+{
+read(t);
+del(t);
+}
+}
+else cout<<"record not found";
+}
+
+void secondary_index::del(int pos)
+{
+char del_ch='*';
+int i,address;
+
+if(pos>=0)
+{
+fstream file;
+file.open("6.txt");
+address=add_list[pos];
+file.seekp(address,ios::beg);
+file.put(del_ch);
+cout<<"\nrecord deleted";
+file.close();
+}
+
+for(int i=pos;i<=count;i++)
+{
+name_list[i]=name_list[i+1];
+add_list[i]=add_list[i+1];
+}
+count--;
+}
+
+int main()
+{
+int ch;
+string key;
+secondary_index i;
+
+i.create_index();
+while(1)
+{
+cout<<"\n main menu\n 1.add\n2.search\n 3.delete\n 4.exit\n";
+cout<<"\nenter the choice...";
+cin>>ch;
+switch(ch)
+{
+case 1:cout<<"enter the data:";
+i.insert();
+break;
+case 2:cout<<"enter name";
+cin>>key;
+i.search(key);
+break;
+case 3:cout<<"enter the name";
+cin>>key;
+i.remove(key);
+break;
+case 4:return 0;
+default:cout<<"wrong choice:";
+}
+}
+}
+ 
+
+PROGRAM 7 – Coseq match
+Cosequential Processing and Sorting Large Files 
+Defined: coordinated processing of two or more sequential lists to produce a single output list.
+Reasons: merge; union ; matching; intersection
+ 
+Working with two lists
+
+Intersection (matching fields from two lists):
+need to initialize properly
+need to synchronize lists so no matches are missed
+need to handle end of file properly
+need to recognize errors (like values out of sequence)
+want to be efficient, simple, maintainable
+
+
+
+METHOD 1:
+startup:    
+open input files
+create output file
+/* should treat 1st record separately */
+set prev_name = low_val
+more_names = true; /* reset if either file reaches EOF */
+read (file1, name1)
+read (file2, name2)
+while (more_names) do
+if (name1 < name2) then
+   read ( file1, name1)
+else if (name1 > name2) then
+   read ( file2, name2)
+else /* match found */
+   write ( outfile, name1 )
+   read ( file1, name1)
+   read (file2, name2)
+endif
+endwhile
+cleanup;
+ 
+The read procedure handles checking for end of file:
+getval (file, val);
+if EOF(file) then more_names = false
+and records out of sequence.
+if val <= prev_name then ERROR
+update prev_name
+ 
+Merging Two Lists (without duplicates) :
+basically as above
+startup:
+
+open input files
+create output file
+set prev_name = low_val  
+more_names = true; /* gets reset when either file reaches EOF */
+otherlist_done = false;
+read (file1, name1)
+read (file2, name2)
+while (more_names) do
+   if (name1 < name2) then
+       write (outfile, name1)
+       read ( file1, name1)
+   else if (name1 > name2) then
+       write (outfile, name2)
+       read ( file2, name2)
+   else /* match found */
+      write ( outfile, name1 )
+read ( file1, name1)
+      read (file2, name2)
+   endif
+endwhile
+read and write remaining file if necessary
+
+* need to rewrite read so we can continue to read from remaining list after first list has reached end-of-file. Text uses HIGH_VALUE. Can also just remember which list has ended.
+ 
+procedure read ( whichlist, file, val );
+   getval (whichlist, file, val);
+if EOF (file) & otherlist_done then /* both lists done */
+more_names = false
+else if EOF (file) then /* just this list done */
+   otherlist_done = true;
+else if val <= prev_name then
+ERROR
+update prev_name
+end read
+ 
+can be applied to problems involving two different lists (obviously the search fields must match) that require us to gather specific information from both lists.
+ 
+[ EXAMPLE: see text p. 301 (268, 2nd edition) ]
+ 
+K-Way Merge
+Ascending order by name: (makes no allowances for duplicates or out-of-sequence records)
+while (more_names)
+out_name = min( name1, name2, name3, ... namek )
+write (outfile, out_name)
+*if (name1 == out_name) then
+   read( file1, name1 )
+*if (name2 == out_name) then
+   read( file2, name2 )
+*if (name3 == out_name) then
+   read( file3, name3 )
+.
+.
+.
+*if (namek == out_name) then
+   read( filek, namek )
+endwhile
+ 
+Merging by Selection Trees
+
+tournament tree
+ 
+each node represents the winner of the comparison
+root is the minimum value
+write the root; replace appropriate leaf; run the tournament again
+requires fewer comparisons than above
+
+
+Merging by Heapsort
+method of speeding up sorting in RAM
+uses selection tree idea
+begin sorting keys as soon as they are available
+in this case we must build tree completely before we can start to write them out
+rules:
+1. each node has 1 key which is <= parent
+2. tree is complete (leaves are only on two levels)
+3. storage can be simple : children of I are at 2I and 2I+1; parent of J is at J/2
+ 
+
+algorithm:
+for I := 1 to count
+   read next record into end of array (call it K)
+   while K < parent(K)
+       switch(K, parent(K)) /* may result in value of K changing */
+   endwhile
+endfor
+
+ Combining READ and BUILD_HEAP:
+read records in blocks
+process each block as it comes; get next one while processing current one
+place each new block right in array at current end so next key to sort is where it should be; then just continue through array
+possible delays while sorter waits for reader to catch up but reader should never have to wait (means sort takes just a bit longer than reading the file)
+ 
+Combining TRAVERSE_HEAP and WRITE:
+for I := 1 to record_count
+write record at array[1] (it’s the smallest)
+move array[end] to array[1] (call it K)
+end = end -1
+while K > both children
+switch (K, smallest child)
+endwhile
+endfor
+ 
+create block of records to write out
+once we have a block we can write it while creating the next block
+ 
+Merging to sort large files on disk
+ 
+Sorting just the keys is a good solution for files where all keys can be held in RAM; with bigger files this doesn’t work so well.
+If we want to then sort the file, it is very expensive since we still have to retrieve each record separately
+SOLUTION: read part of the file, sort it in RAM; write it; read next part etc....then merge the resultant files
+- can sort BIG files of virtually any size
+- reading for setup is sequential, so as fast as possible
+- reading for merge/output is also sequential (only do random access when switching files)
+- can apply Heapsort and combine input/output and processing ops
+- since all is sequential; can do tape sort
+
+
+#include<iostream>
+#include<fstream>
+#include<string>
+using namespace std;
+
+class coseq
+{
+public:
+string list1[100],list2[100];
+int count1,count2;
+void load_list();
+void sort_list();
+void match();
+};
+
+void coseq::load_list()
+{
+fstream file1,file2;
+string name;
+count1=-1;
+count2=-1;
+
+file1.open("71.txt");
+while(!file1.eof())
+{
+name.erase();
+getline(file1,name);
+list1[++count1]=name;
+}
+file1.close();
+
+cout<<"nmae is 1st file\n";
+for(int i=0;i<=count1;i++)
+cout<<list1[i]<<"\n";
+
+file2.open("72.txt");
+while(!file2.eof())
+{
+name.erase();
+getline(file2,name);
+list2[++count2]=name;
+}
+file2.close();
+cout<<"names in 2nd file\n";
+for(int i=0;i<=count2;i++)
+cout<<list2[i]<<"\n";
+}
+
+void coseq::sort_list()
+{
+int i,j;
+string temp;
+
+for(int i=0;i<=count1;i++)
+{
+for(int j=i+1;j<=count1;j++)
+{
+if(list1[i]>list1[j])
+{
+temp=list1[i];
+list1[i]=list1[j];
+list1[j]=temp;
+}
+}
+}
+
+for(i=0;i<=count2;i++)
+{
+for(j=i+1;j<=count2;j++)
+{
+if(list2[i]>list2[j])
+{
+temp=list2[i];
+list2[i]=list2[j];
+list2[j]=temp;
+}}}
+cout<<"\nafter sorting\n";
+cout<<"names of 1st file:";
+for(int i=0;i<=count1;i++)
+cout<<list1[i]<<"\n";
+
+cout<<"\n names of 2nd file";
+for(int i=0;i<=count2;i++)
+cout<<list2[i]<<"\n";
+}
+
+void coseq::match()
+{
+int i=0,j=0;
+cout<<"\ncommon names are:";
+while(i<=count1 && j<=count2)
+{
+if(list1[i]==list2[j])
+{
+cout<<list1[i]<<"\n";
+i++;
+j++;
+}
+
+if(list1[i]<list2[j]) i++;
+if(list1[i]>list2[j]) j++;
+}
+}
+
+int main()
+{
+coseq c;
+c.load_list();
+c.sort_list();
+c.match();
+return 0;
+}
+
+Program : Merge Sort – K-way merging
+
+Remaining bottleneck: merge phase
+for K-way merge buffer size =
+(1/K) X size of RAM space = (1/K) X size of each run
+takes K seeks to read all records in each run, K runs altogether so merge = K2 seeks.
+Sort Merge = O(K2)
+ 
+100 byte records; 10 byte key field; can use 1 megabyte of RAM;
+can hold 10,000 records in RAM at a time
+ 
+8,000,000 record file; break it into 800 runs of 10,000 records each:
+- assume 1 seek per sequential access
+- for sort have 800 seeks and transfers for reading and for writing
+- for merge split RAM into 800 parts (each now holds 1/800 of a run) so must access each run 800 times
+- 800 runs X 800 seeks = 640,000 seeks (1 megabyte buffers )
+ 
+SOLUTIONS:
+allocate more hardware
+perform merge in several steps
+increase length of sorted runs
+overlap I/O operations
+HARDWARE:
+increase RAM
+increase # of dedicated disk drives; organize files to minimize seeks
+increase # of I/O channels
+ 
+MULTI-STEP MERGE: 8,000,000 records
+process sub-sets of 25 sets (320,000 records) of 32 runs each (10,000 records/run)
+Step 1 (sort/merge each subset):
+input buffer holds 1/32 of a run = 32 X 32 = 1,024 seeks.
+Have 25 to do so Total = 25 X 1,024 = 25,600 seeks (each run does 32 megabytes)
+Step 2 (merge the 25 sets):
+allocate 1/25 of total buffer space for each run
+each buffer then holds 400 records (same as 1/800 of a run; since 1 run = 32 megabytes).
+800 seeks per run, so 25 X 800 seeks = 20,000 seeks
+Total = 25,600 + 20,000 = 46,500 seeks
+ 
+Traded extra passes for increased buffer space for each pass; increased space for each pass = increased random access.
+ 
+Heapsort Version 2: Using Replacement Selection
+Read set of records and sort with heapsort (call this primary heap)
+Write out only first record (smallest)
+Bring in new key
+if it’s bigger than one just written; place it in primary heap
+if it’s smaller; place it in secondary heap
+Repeat until primary heap is empty
+ 
+This typically increases the size of one heapsort (run) by factor of 2
+Cost:
+800 runs = 1600 seeks for plain heapsort
+for replacement selection split I/O buffer into 7500 records for sort; 2500 records for input (waiting) buffer
+= 8,000,000/2,500 = 3,200 seeks to do the file SO....
+6,400 seeks for replacement selection sort (!)
+BUT.....
+ 
+run length for replacement selection sort is ~ 15,000 records
+(7,500 spaces for records; 1 run does 2 X that = 15,000); 50% more than one run of plain heapsort
+ 
+8,000,000 records / 15,000 records per run = 534 runs
+Now for the merge part split RAM (1mB) into 534 buffers;
+holds 18.73 records (let’s say 18) so
+15,000/18 = 834 seeks per run
+we get 834 seeks per run X 534 runs
+= 445,356 seeks altogether (compared to 640,000 for plain heapsort)
+ 
+What if we add Multistep Merge to Replacement Selection Sort?
+Approach	# Records/Seek to form Runs	Size of Runs Formed	# Runs Formed	Merge Pattern Used	# Seeks in Merge Phases	Total # of Seeks
+800 Ram Sorts	10,000	10,000	800	25 X 32-way then 25-way	25,600
+20,000	127,200
+Replacement Selection, Random Order	2,500	15,000	534	19 X 28-way
+then 19-way	22,876
+15,162	124,438
+Replacement Selection, Partially Ordered	2,500	40,000	200	20 X 10-way
+then 20-way	8,000
+16,000	110,400
+The whole thing can be further improved if we can dedicate two disks - one for input and one for output; and more yet if we can use more than one processor.
+It can all fall apart if we are in a multiprogramming environment.
+Ideally, sorting large files is done when machine(s) can be dedicated to just the sort. Also these improvements assume you can read and write at the same time as process.
+ 
+Summary:
+Use Heapsort for in-Ram sorting
+Use as much RAM as possible
+Use Multi-Step Merge if # initial runs is large
+Consider Replacement Selection to form initial runs if file is partially ordered
+Use > 1 Disk Drive and I/O Channel
+ 
+Sorting on tape
+Distribute unsorted file into sorted runs (Replacement Selection is good)
+Merge runs into single sorted file
+Balanced Merge: spread runs among the available drives to make more efficient use of them
+Two-Way balanced Merge
+uses 4 tape drives (goes from 2 to 2)
+ 
+
+K-Way Balanced Merge as above but uses more drives
+
+
+Multi-Phase Merge
+try to eliminate empty runs
+try to spread runs to maximize use of tapes while minimizing actual reading and writing
+ 
+Maintenance:
+adding, deleting, changing records
+ 
+batch processing
+- updates accumulate in a transaction file (often sorted into same key order as master file)
+applied to master file in a maintenance run
+- transaction files are often edited and carefully checked before being applied to the master file
+- audit/error listing (log file) is standard; sometimes in a form that can be edited and used to form the basis for the next transaction file
+- matched vs unmatched records (unmatched are those whose keys can be found in only one of the files - master and transaction)
+
+
+#include<iostream>
+#include<string>
+#include<fstream>
+using namespace std;
+class record
+{
+ public:char name[20];
+        char usn[20];
+}recd[20];
+fstream file[8];
+int no;
+char fname[8][8]={"f1.txt","f2.txt","f3.txt","f4.txt","f5.txt","f6.txt","f7.txt","f8.txt"};
+
+
+void merge_file(char *file1,char *file2,char *filename)
+{
+ record rcd[20];
+int i,k;
+k=0;
+fstream f1,f2;
+f1.open(file1,ios::in);
+f2.open(file2,ios::in);
+while(!f1.eof())
+{
+ f1.getline(recd[k].name,20,'|');
+ f1.getline(recd[k++].usn,20,'\n');
+}
+while(!f2.eof())
+{
+ f2.getline(recd[k].name,20,'|');
+f2.getline(recd[k++].usn,20,'\n');
+}
+int t,y;
+record temp;
+for(t=0;t<k-2;t++)
+for(y=0;y<k-t-2;y++)
+if(strcmp(recd[y].name,recd[y+1].name)>0)
+{
+temp=recd[y];
+recd[y]=recd[y+1];
+recd[y+1]=temp;
+}
+fstream temp1;
+temp1.open(filename,ios::out);
+for(t=1;t<k-1;t++)
+temp1<<recd[t].name<<"|"<<recd[t].usn<<"\n";
+f1.close();
+f2.close();
+temp1.close();
+return;
+}
+
+void kwaymerge()
+{
+int i,k;
+k=0;
+char filename[7][20]={"f11.txt","f22.txt","f33.txt","f44.txt","f111.txt","f222.txt","f1111.txt"};
+for(i=0;i<8;i+=2)
+{
+merge_file(fname[i],fname[i+1],filename[k++]);
+}
+k=4;
+for(i=0;i<4;i+=2)
+{
+merge_file(filename[i],filename[i+1],filename[k++]);
+}
+merge_file(filename[4],filename[5],filename[6]);
+return;
+}
+
+
+main()
+{record rec[20];
+int i;
+cout<<"enter no of rec\n";
+cin>>no;
+cout<<"\n enter the details";
+for(i=0;i<8;i++)
+file[i].open(fname[i],ios::out);
+for(i=0;i<no;i++)
+{
+cout<<"name";
+cin>>rec[i].name;
+cout<<"usn";
+cin>>rec[i].usn;
+file[i%8]<<rec[i].name<<"|"<<rec[i].usn<<"\n";
+}
+for(i=0;i<8;i++)
+file[i].close();
+kwaymerge();
+fstream result;
+result.open("f1111.txt",ios::in);
+cout<<"sorted records are\n";
+char name[20],usn[20];
+for(i=0;i<no;i++)
+{
+result.getline(name,20,'|');
+result.getline(usn,20,'\n');
+cout<<"\nname:"<<name<<"\nusn:"<<usn<<"\n";
+}
+}
+
+
+
+Program : Reclaiming space in records 
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+using namespace std;
+class student
+{
+  public:
+	string USN;
+	string Name;
+	string Branch;
+	int Semester;
+ 	string buffer;
+		
+	void initialize();	
+	void read_data();
+	void pack();
+	void write_to_file();
+	void unpack();
+	int search(string);
+	int delete_from_file(string);
+	void modify(string);
+	class node
+	{
+		public:int addr;
+		node *link;
+	};
+	node *first;
+	
+};
+
+void student::initialize()
+{
+	first=NULL;
+}
+
+void student::read_data()
+{
+	cout<<"\nUsn:";
+	cin>>USN;
+	cout<<"\nName:";
+	cin>>Name;
+	cout<<"\nBranch:";
+	cin>>Branch;
+	cout<<"\nSemster:";
+	cin>>Semester;
+}
+void student::pack()
+{
+	string sem;
+	stringstream out;
+	out << Semester;
+	sem = out.str();
+	buffer.erase();	
+	buffer+=USN+'|'+Name+'|'+Branch+'|'+sem;
+	for(;buffer.size()<100;) buffer+='$';
+	buffer+='\n';
+	
+}	
+
+void student::write_to_file()
+{
+	fstream file1;
+	int pos=0;
+	//cout<<"\ninside write pos = "<<pos;
+	if(first==NULL)
+	{
+		file1.open("1.txt",ios::out|ios::app);
+		file1<<buffer;
+		cout<<"\ninside first NULL ";
+	}
+	else
+	{
+		file1.open("1.txt");
+		node *q,*p;
+	//code for last released record space will be used
+		q=first;
+		while(q->link!=NULL)
+		{
+			p=q;
+			q=q->link;
+		}
+		pos=q->addr;
+		p->link=NULL;
+		file1.seekp(pos,ios::beg);
+                file1<<buffer;
+	//code for first released record space will be used
+	
+	}
+	file1.close();
+}
+
+void student::unpack()
+{
+	
+	string sem;
+	int ch=1,i=0;
+	USN.erase();	
+	while (buffer[i]!='|')
+	  USN+=buffer[i++]; 		
+	
+	Name.erase();
+	i++;
+	while (buffer[i]!='|')
+	  Name+=buffer[i++]; 	
+	
+	Branch.erase();	
+	i++;
+	while (buffer[i]!='|')
+	  Branch+=buffer[i++]; 	
+	
+	sem.erase();	
+	i++;
+	while (buffer[i]!='$')
+	  sem+=buffer[i++];
+	istringstream out(sem);
+	out>>Semester;
+		
+}
+
+int student::search(string key)
+{
+	ifstream file;
+	int flag=0, pos=0;
+	file.open("1.txt",ios::in);
+	if(file==NULL)
+	{
+		cout<<"\nFile isn't available";
+		return 0;
+	}
+	while (!file.eof())
+	{
+		buffer.erase();		
+		getline(file,buffer);
+		unpack();
+		if (key==USN) {cout<<"\nFound the key. The record is  "<<buffer;pos=file.tellg(); flag=1;return pos;}
+	}
+	file.close();	
+	if (!flag) {cout<<"\n Not Found \n\n"; return pos;}
+	
+}
+
+int student::delete_from_file(string key)
+{
+	fstream file;
+	char del_mark='*',t;
+	int pos,flag=0;
+	node *p;
+	pos=search(key);
+	cout<<"\npos=  "<<pos;
+	if (pos){	
+		file.open("1.txt");
+		pos-=101; //skip the $$$$$$ and \n characters
+		file.seekp(pos,ios::beg);
+		file.put(del_mark);				
+		flag=1; 
+		cout<<"\n\nThe position of deleted record is:"<<pos;
+		p=new node;
+		p->addr=pos;
+		cout<<"\n p->addr "<<p->addr;
+		p->link=NULL;
+		if(first==NULL)
+		{
+			cout<<"\nfirst is null";
+			first=p;
+		}
+		else
+		{
+			node *q;
+			q=first;
+			while(q->link!=NULL)
+			{
+				//cout<<"\navailable space = "<<q->addr;
+				q=q->link;
+			}
+			q->link=p;
+			q=first;
+			while(q!=NULL)
+			{
+			//	cout<<"\navailable space is ="<<q->addr;
+				q=q->link;
+			}
+		}
+		
+				
+		}
+		
+	file.close();	
+	buffer.empty();
+	if (!flag) return 0; 
+	else return 1;
+		
+}		
+
+void student::modify(string key)
+{
+	int choice;	
+	if (delete_from_file(key)){
+	cout<<"\n What to modify?";
+	cin>>choice;
+	switch(choice)
+	{
+		case 1: cout<<"\nUSN:"; cin>>USN; break;
+		case 2:	cout<<"\nName:";cin>>Name;break;
+		case 3:	cout<<"\nBranch:";cin>>Branch;break;
+		case 4:	cout<<"\nSemster:";cin>>Semester;break;
+		default: cout <<"Wrong Choice";
+	}
+	buffer.erase();
+	pack();
+	write_to_file();
+	}
+}
+	
+int main()
+{
+	int count,choice,len,i;
+	student s1;
+	s1.initialize();
+	string key;
+	while(1){	
+	cout <<"\nMain Menu\n 1.Add \n\n 2.Delete \n\n 3.Modify \n\n 4.Search \n\n 5.Exit\n\nEnter the choice:";
+	cin>>choice;
+	switch (choice)
+	{
+		case 1: cout<<"Data\n";
+			s1.read_data();
+			s1.pack();			
+			s1.write_to_file();
+			break;
+		case 2: cout <<"\n\nEnter the key";
+			cin>>key;
+			i=s1.delete_from_file(key);
+			break;
+		case 3: cout <<"\n\nEnter the key";
+			cin>>key;
+			s1.modify(key);
+			//exit(1);
+			break;
+		case 4: cout <<"\n\nEnter the key";
+			cin>>key;
+			i=s1.search(key);
+			break;
+		case 5: return 0;
+		default: cout<<"\n\nWrong Choice";
+	}}		
+}
+	
+
+Program : BTree
+
+A B-tree is a tree data structure that keeps data sorted and allows searches, insertions, and deletions in logarithmic amortized time. Unlike self-balancing binary search trees, it is optimized for systems that read and write large blocks of data. It is most commonly used in database and file systems.
+The B-Tree Rules
+Important properties of a B-tree:
+•	B-tree nodes have many more than two children.
+•	A B-tree node may contain more than just a single element.
+The set formulation of the B-tree rules: Every B-tree depends on a positive constant integer called MINIMUM, which is used to determine how many elements are held in a single node.
+•	Rule 1: The root can have as few as one element (or even no elements if it also has no children); every other node has at least MINIMUM elements.
+•	Rule 2: The maximum number of elements in a node is twice the value of MINIMUM.
+•	Rule 3: The elements of each B-tree node are stored in a partially filled array, sorted from the smallest element (at index 0) to the largest element (at the final used position of the array).
+•	Rule 4: The number of subtrees below a nonleaf node is always one more than the number of elements in the node.
+o	Subtree 0, subtree 1, ...
+•	Rule 5: For any nonleaf node:
+1.	An element at index i is greater than all the elements in subtree number i of the node, and
+2.	An element at index i is less than all the elements in subtree number i + 1 of the node.
+•	Rule 6: Every leaf in a B-tree has the same depth. Thus it ensures that a B-tree avoids  the problem of a unbalanced tree.
+ 
+ 	 
+
+
+The Set Class Implementation with B-Trees
+Remember that "Every child of a node is also the root of a smaller B-tree".
+public class IntBalancedSet implements Cloneable
+{
+    private static final int MINIMUM = 200;
+    private static final int MAXIMUM = 2*MINIMUM;
+    int dataCount;
+    int[] data = new int[MAXIMUM + 1];
+    int childCount;
+    IntBalancedSet[] subset = new IntBalancedSet[MAXIMUM + 2];
+
+    // Constructor: initialize an empty set
+    public IntBalancedSet() 
+
+    // add: add a new element to this set, if the element was already in the set, then there is no change.
+    public void add(int element)
+
+    // clone: generate a copy of this set.
+    public IntBalancedSet clone()
+
+    // contains: determine whether a particular element is in this set
+    pubic boolean contains(int target)
+
+    // remove: remove a specified element from this set
+    public boolean remove(int target)
+}
+ 
+Searching for a Target in a Set
+The psuedocode:
+1.	Make a local variable, i, equal to the first index such that data[i] >= target. If there is no such index, then set i equal to dataCount, indicating that none of the elements is greater than or equal to the target.
+2.	if (we found the target at data[i])
+return true;
+else if (the root has no children)
+return false;
+else return subset[i].contains(target);
+See the following example, try to search for 10.
+ 
+We can implement a private method:
+•	private int firstGE(int target), which returns the first location in the root such that data[x] >= target. If there's no such location, then return value is dataCount.
+ 
+Adding an Element to a B-Tree
+It is easier to add a new element to a B-tree if we relax one of the B-tree rules.
+Loose addition allows the root node of the B-tree to have MAXIMUM + 1 elements. For example, suppose we want to add 18 to the tree:
+ 
+The above result is an illegal B-tree. Our plan is to perform a loose addition first, and then fix the root's problem.
+The Loose Addition Operation for a B-Tree:
+private void looseAdd(int element)
+{
+    1. i = firstGE(element) // find the first index such that data[i] >= element
+    2. if (we found the new element at data[i]) return; // since there's already a copy in the set
+    3. else if (the root has no children)
+           Add the new element to the root at data[i]. (shift array)
+    4. else {
+           subset[i].looseAdd(element);
+           if the root of subset[i] now has an excess element, then fix that problem before returning.
+       }
+}
+ 
+private void fixExcess(int i)
+// precondition: (i < childCount) and the entire B-tree is valid except that subset[i] has MAXIMUM + 1 elements.
+// postcondition: the tree is rearranged to satisfy the loose addition rule
+Fixing a Child with an Excess Element:
+•	To fix a child with MAXIMIM + 1 elements, the child node is split into two nodes that each contain MINIMUM elements. This leaves one extra element, which is passed up to the parent.
+•	It is always the middle element of the split node that moves upward.
+•	The parent of the split node gains one additional child and one additional element.
+•	The children of the split node have been equally distributed between the two smaller nodes.
+ 
+ 
+ 
+ 
+Fixing the Root with an Excess Element:
+•	Create a new root.
+•	fixExcess(0).
+ 
+ 
+Removing an Element from a B-Tree
+Loose removal rule: Loose removal allows to leave a root that has one element too few.
+public boolean remove(int target)
+{
+    answer = looseRemove(target);
+    if ((dataCount == 0) && (childCount == 1))
+        Fix the root of the entire tree so that it no longer has zero elements;
+    return answer;
+}
+
+private boolean looseRemove(int target) 
+{
+1. i = firstGE(target)
+2. Deal with one of these four possibilities:
+   2a. if (root has no children and target not found) return false.
+   2b. if( root has no children but target found) { 
+           remove the target
+           return true
+       }
+   2c. if (root has children and target not found) {
+           answer = subset[i].looseRemove(target)
+           if (subset[i].dataCount < MINIMUM)
+               fixShortage(i)
+           return true
+       }
+   2d. if (root has children and target found) {
+           data[i] = subset[i].removeBiggest()
+           if (subset[i].dataCount < MINIMUM)
+               fixShortage(i)
+           return true
+       }
+}
+
+private void fixShortage(int i)
+// Precondition: (i < childCount) and the entire B-tree is valid except that subset[i] has MINIMUM - 1 elements.
+// Postcondition: problem fixed based on the looseRemoval rule.
+
+private int removeBiggest()
+// Precondition: (dataCount > 0) and this entire B-tree is valid
+// Postcondition: the largest element in this set has been removed and returned. The entire B-tree is still valid based on the looseRemoval rule.
+ 
+Fixing Shortage in a Child:
+When fixShortage(i) is activated, we know that subset[i] has MINIMUM - 1 elements. There are four cases that we need to consider:
+Case 1: Transfer an extra element from subset[i-1]. Suppose subset[i-1] has more than the MINIMUM number of elements.
+a.	Transfer data[i-1] down to the front of subset[i].data.
+b.	Transfer the final element of subset[i-1].data up to replace data[i-1].
+c.	If subset[i-1] has children, transfer the final child of subset[i-1] over to the front of subset[i].
+ 
+ 
+Case 2: Transfer an extra element from subset[i+1]. Suppose subset[i+1] has more than the MINIMUM number of elements.
+Case 3: Combine subset[i] with subset[i-1]. Suppose subset[i-1] has only MINIMUM elements.
+a.	Transfer data[i-1] down to the end of subset[i-1].data.
+b.	Transfer all the elements and children from subset[i] to the end of subset[i-1].
+c.	Disconnect the node subset[i] from the B-tree by shifting subset[i+1], subset[i+2] and so on leftward.
+ 
+ 
+Case 4: Combine subset[i] with subset[i+1]. Suppose subset[i+1] has only MINIMUM elements.
+We may need to continue activating fixShortage() until the B-tree rules are satisfied.
+Removing the Biggest Element from a B-Tree:
+private int removeBiggest() 
+{
+    if (root has no children)
+        remove and return the last element
+    else {
+        answer = subset[childCount-1].removeBiggest()
+        if (subset[childCount-1].dataCount < MINIMUM)
+            fixShortage(childCount-1)
+        return answer
+    }
+}
+A more concrete example for node deletion:
+ 
+
+
+
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+struct node
+{
+	int ele[4];
+	int child[4];
+};
+
+class btree
+{
+public:
+	node *tree[10][10];
+	int count[10];
+	int leaf;
+	int path[10];
+	
+	btree();
+	node* create_node();
+	void insert(int);
+	void main_search(int);
+	void display_tree();
+	void insert_node(node*,int);
+	void search(int);
+	int search_node (node*,int);
+	int nodefull(node*);
+	void split(node*);
+};
+
+btree::btree()
+{
+	leaf=-1;
+	for (int i=0;i<10;i++)
+	{
+		count[i]=-1;
+		path[i]=-1;
+	}
+}
+
+node* btree::create_node()
+{
+  node *n;
+  n = new node;
+  for (int i=0;i<4;i++) 
+  {
+		n->ele[i]=-1;
+		n->child[i]=-1;
+  }
+  return n;
+}
+
+
+void btree::insert(int key)
+{
+	int n, parent;
+	node *first_node;
+	if (leaf==-1) 
+	{
+		first_node=create_node();
+		tree[0][0]=first_node;
+		leaf++;count[0]++;
+		first_node->ele[0]=key;		
+	}
+	else if (leaf==0)
+	{
+		if (nodefull(tree[0][0])) 
+		{
+			path[leaf]=0;
+			split(tree[0][0]);
+			insert(key);
+		}
+		else insert_node(tree[0][0],key);
+	}	
+	else
+	{
+		search(key);
+		n=path[leaf];
+		parent=path[leaf-1];
+	
+		if ( (nodefull(tree[leaf][n])) ) 
+		{
+			split(tree[leaf][n]);
+			insert(key);
+		}
+		else 
+			insert_node(tree[leaf][n],key);
+	   }
+}
+		
+void btree::main_search(int key)
+{
+	int flag=0, i;	
+	node *node1;
+	search(key);
+	node1=tree[leaf][path[leaf]];
+
+	for (i=0;node1->ele[i]!=-1;i++)
+		if (node1->ele[i]==key) 
+		{
+			flag=1; 
+			break;
+		}
+
+	cout<<"\nThe path traversed is: "; 
+	for (i=0;path[i]!=-1;i++)
+		cout<<path[i]<<" -> ";
+
+	if (flag) 
+		cout <<"\nElement Found";
+	else 
+		cout<<"\nNot Found";
+}
+
+void btree::display_tree()
+{
+	int i,j,k;	
+	for (i=0;i<=leaf;i++)
+	{
+		cout<<"\n\nLevel------ " <<i<<"\n";
+		for (j=0;j<=count[i];j++)
+		{
+			cout<<"   tree["<<i<<"]["<<j<<"]:";
+			for (k=0;tree[i][j]->ele[k]!=-1&& k<4;k++)
+				cout<<" "<<tree[i][j]->ele[k];
+		}
+	}
+}
+	
+void btree::search(int key)
+{
+	int i,j,temp;	
+	path[0]=0;				//always start the path from root
+	if (leaf)
+	{						// search only if there are more than 1 level
+		j=0;		
+		for (i=0;i<leaf;i++)
+		{
+			temp=search_node(tree[i][j],key);
+	 		path[i+1]=temp;
+			j=temp;
+		}
+	}
+}	
+
+int btree::search_node(node *node1, int key)
+{
+	for (int i=0;i<4;i++)
+	{
+		if (key<=node1->ele[i]) 
+			return node1->child[i];
+		else if (node1->ele[i+1]==-1) 
+			return node1->child[i];
+	}
+}
+
+int btree::nodefull(node *node1)
+{
+	if (node1->ele[3]!=-1) 
+		return 1;
+	else 
+		return 0;
+}
+ 
+void btree::insert_node(node *node1, int key)
+{
+	int flag=0,count=-1,i,j, x, y, l,t;
+	node *newnode, *n1;
+	for (i=0;i<4;i++) 
+		if (node1->ele[i]!=-1) ++count;
+		i=0;
+	while (!flag && node1->ele[i]!=-1)
+	{
+		if (node1->ele[i] > key)			//not considering duplicate entries
+		{
+			flag=1;			
+			for (int j=count;j>=i;j--)
+			   node1->ele[j+1]=node1->ele[j];
+   			node1->ele[i]=key;
+		}
+		i++;
+	}
+	if (!flag)						//highest element added at end
+	{
+		node1->ele[count+1]=key;	
+		for (i=leaf-1;i>=0;i--)
+		{
+			
+			n1=tree[i][path[i]];			
+			for (t=0;n1->ele[t]!=-1;t++);
+			n1->ele[t-1]= key;
+		}	
+	}
+	
+	for (i=0;i<=count+1;i++)
+		cout<<"\t\t"<<node1->ele[i];
+}
+
+void btree::split(node *oldnode)
+{
+	node *newnode, *parent, *n1, *n2;
+	int i,j,k,n,t=0,x,y,pos,m,ct=0;
+	newnode = create_node();
+
+	newnode->ele[0]=oldnode->ele[2];		//copy elements to new node
+	newnode->ele[1]=oldnode->ele[3];
+	
+	oldnode->ele[2]=-1;				//delete entries in old node
+	oldnode->ele[3]=-1;
+
+	t=count[leaf];
+	n=path[leaf];
+	cout<<"\nleaf= "<<leaf<<"\tcount[leaf]= "<<t <<" path[leaf]=  "<<n;
+	for (i=t,j=t+1;i>n;i--,j--)			//move the elements in leaf level one place right
+	{
+	cout<<"\ninside for";
+	tree[leaf][j]=tree[leaf][i];
+	}
+
+	tree[leaf][n+1] = newnode;			//insert new node to the tree
+	count[leaf]++;
+	x=leaf;	
+	t=0;
+	if(leaf==0)t=1;
+	else 
+	{	parent=tree[leaf-1][path[leaf-1]];
+		if(nodefull(parent)) t=1;
+	}
+	if(t)
+	{
+		leaf++;  cout<<"level increased\n";
+		count[leaf]=count[x];
+		for (i=0;i<=count[leaf];i++)			//copy the leaf nodes to the new level
+			std::swap(tree[leaf][i],tree[x][i]);
+		for (i=leaf-1;i>=0;i--) count[i]=-1;
+		
+		for(i=leaf,j=i-1;i>0;i--,j--)
+		{
+			k=0;
+			while(k<=count[i])
+		      {
+			newnode=create_node();
+			count[j]++;
+			tree[j][count[j]]=newnode;
+			n1=tree[i][k];
+			n2=tree[i][k+1];
+			
+			for (x=0;n1->ele[x]!=-1;x++);	//find last element in the nodes
+			for (y=0;n2->ele[y]!=-1;y++);
+			newnode->ele[0]=n1->ele[x-1];
+			newnode->child[0]=k;
+			newnode->ele[1]=n2->ele[y-1];
+			newnode->child[1]=k+1;
+			k+=2;
+			if(k<=count[i]){
+			   n1=tree[i][k];
+			   for (x=0;n1->ele[x]!=-1;x++);
+			   newnode->ele[2]=n1->ele[x-1];
+			   newnode->child[2]=k;
+			   k++;
+			   }
+		       }
+		}	  
+	}
+	else
+	{
+		cout<<"-----------\n";
+		i=n; j=0; ct=0;
+		while(parent->ele[ct]!=-1)ct++;
+		k=tree[leaf][n+1]->ele[1];
+		while(parent->ele[j]!=k)j++;
+		while(j<=ct)
+		{
+			 n1=tree[leaf][i];
+			 for (x=0;n1->ele[x]!=-1;x++);
+			 parent->ele[j]=n1->ele[x-1];
+			if(leaf==2) cout<<"  "<<n1->ele[0];
+				cout<<"\n "<<n1->ele[x-1]<<" "<<j;
+			  parent->child[j]=i;
+				i++; j++;
+		}
+		cout<<"------\n";
+		j=path[leaf-1]+1;
+		while(j<=count[leaf-1])
+		{
+			parent=tree[leaf-1][j];
+			 for (x=0;parent->ele[x]!=-1;x++) (parent->child[x])++;
+			j++;
+		}		
+			
+	}
+	
+}
+
+int main()
+{
+	btree bt;
+	int choice, key;
+
+	while(1)
+	{
+		cout<<"\n\n\nMain Menu\n-------------------\n1.Insert\n2.Search\n3.Display Tree\n4.Exit\n\nEnter your choice:";
+		cin>>choice;
+		switch(choice)
+		{
+		case 1:	cout<<"\nEnter the element:";
+			cin>>key;
+			bt.insert(key);
+			break;
+		case 2:cout<<"Enter the key:";
+			cin>>key;
+			bt.main_search(key);
+			break;
+		case 3: bt.display_tree();
+			break;
+		case 4: return 0;
+		default: cout<<"\nEnter valid choice";
+		}
+	}
+}
+
+
+Program : B +tree
+B+-trees  Main idea: in a B-tree, the key values have two functions: – separators: to determine the path to follow during the search – Key values: to allow accessing the information associated with them (that is, the pointers to the data)  In a B+-tree such functions are kept distinct: – The leaf nodes contain all the key values (and the associated information) – The internal nodes (organized as a B-tree) store some separators which have the only function of determining the path to follow when searching for a key value 10 5 B+-trees  In addition the leaf nodes are linked in a list, in order to efficiently support range searches or sequential searches (there is also a pointer to the first element of such list to support fast accesses to the minimum key value)  partial duplication of the keys – The index entries (keys and data references) are only stored in the leaf nodes – A search for a given key value must always determine a leaf node 10 6 B+-trees  The subtree on the left side of a separator contains key values that are lower than the separator; the subtree on the right side of a separator contains key values which are greater or equal than the separator  In the case of alphanumeric keys, one c
+
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+struct node
+{
+	int ele[4];
+	int child[4];
+	node *next;
+};
+
+class bptree
+{
+public:
+	node *tree[10][10];
+	int count[10];
+	int leaf;
+	int path[10];
+	node *head;
+	
+	bptree();
+	node* create_node();
+	void insert(int);
+	void main_search(int);
+	void display_tree();
+	void insert_node(node*,int);
+	void search(int);
+	int search_node (node*,int);
+	int nodefull(node*);
+	void split(node*);
+	void display_seqset();
+};
+node *first_node;
+bptree::bptree()
+{
+	leaf=-1;
+	for (int i=0;i<10;i++){  count[i]=-1; path[i]=-1; }
+	first_node=create_node();
+		tree[0][0]=first_node;
+		leaf++;count[0]++;
+	head=first_node;
+}
+
+node* bptree::create_node()
+{
+  node *n;
+  n = new node;
+  for (int i=0;i<4;i++) 
+  {
+	  n->ele[i]=-1;
+	  n->child[i]=-1;
+  }
+  n->next=NULL;
+  return n;
+}
+
+
+void bptree::insert(int key)
+{
+	int n;
+	if (leaf==0)	path[leaf]=0;
+	else search(key);
+		n=path[leaf];
+		if ( (nodefull(tree[leaf][n])) ) 
+		{
+			split(tree[leaf][n]);
+			insert(key);
+		}
+		else 
+			insert_node(tree[leaf][n],key);
+}
+		
+void bptree::main_search(int key)
+{
+	int i;	
+	node *node1;
+	search(key);
+	node1=tree[leaf][path[leaf]];
+	for (i=0;i<4;i++)
+		if (node1->ele[i]==key) 
+		{
+		cout<<"\nThe path traversed is: "; 
+		for (i=0;path[i]!=-1;i++)
+		cout<<path[i]<<" -> ";
+
+		 cout <<"\nElement Found";
+			return;
+		}
+	 cout<<"\nNot Found!";
+}
+
+void bptree::display_tree()
+{
+	int i,j,k=0;	
+	for (i=0;i<=leaf;i++)
+	{
+		cout<<"\n\nLevel------ " <<i<<"\n";
+		for (j=0;j<=count[i];j++)
+		{
+			k=0; if (i!=leaf&&j==0) 	k=1; 
+			cout<<"   tree["<<i<<"]["<<j<<"]:";		             
+			for (;tree[i][j]->ele[k]!=-1 && k<4;k++)	cout<<" "<<tree[i][j]->ele[k];
+			cout<<"\t";
+		}
+	}
+} 
+	
+void bptree::search(int key)
+{
+	int i,j=0,temp;	
+	path[0]=0;
+	if(!leaf) return;				//always start the path from root					
+		for (i=0;i<leaf;i++)
+		{
+			temp=search_node(tree[i][j],key);
+	 		path[i+1]=temp;
+			j=temp;
+		}
+}	
+
+int bptree::search_node(node *node1, int key)
+{
+	if (key<=node1->ele[0]) 	return  node1->child[0];	
+	for (int i=0;i<4;i++)
+	{	
+		if ((key >= node1->ele[i]) && (key < node1->ele[i+1])) 	return node1->child[i];
+		else if (i==3 || node1->ele[i+1]==-1) 	return node1->child[i];
+	}
+}
+
+int bptree::nodefull(node *node1)
+{
+	if (node1->ele[3]!=-1) 	return 1;
+	else 	return 0;
+}
+ 
+void bptree::insert_node(node *node1, int key)
+{
+	int flag=0, ct=-1,i=0,j, x, y, l;
+	node *newnode, *parent;
+	while(node1->ele[ct+1]!=-1)ct++;
+	while (!flag && node1->ele[i]!=-1)
+	{
+		if (node1->ele[i] > key)			//not considering duplicate entries
+		{
+			flag=1;			
+			for (int j=ct;j>=i;j--)  node1->ele[j+1]=node1->ele[j];
+   			node1->ele[i]=key;
+		}
+		i++;
+	}
+	if (!flag) 	node1->ele[ct+1]=key;			//highest element added at end
+
+	if (node1->ele[0]==key)						//new element is the lowest, hence propogate this till root
+	{
+			
+		for (i=leaf-1;i>=0;i--)
+		{
+			x=path[i+1];			
+			if (tree[i][path[i]]->ele[x] > key) tree[i][path[i]]->ele[x]=key;
+			else insert_node(tree[i][x],key);
+		}
+	}
+	
+	for (i=0;i<=ct+1;i++)
+		cout<<"\t\t"<<node1->ele[i];
+}
+
+void bptree::split(node *oldnode)
+{
+	node *newnode, *parent, *n1, *n2;
+	int i,j,k,n,t=0,x,ct=0;
+	newnode = create_node();
+
+	newnode->ele[0]=oldnode->ele[2];		//copy elements to new node
+	newnode->ele[1]=oldnode->ele[3];
+	
+	oldnode->ele[2]=-1;				//delete entries in old node
+	oldnode->ele[3]=-1;
+
+	k=count[leaf];
+	n=path[leaf];
+	
+	for (i=k,j=k+1;i>n;i--,j--)	tree[leaf][j]=tree[leaf][i];		
+						
+	tree[leaf][n+1] = newnode;			//insert new node to the tree
+	count[leaf]++;
+	x=leaf;	
+	if(leaf==0)t=1;
+	else 
+	{	parent=tree[leaf-1][path[leaf-1]];
+		if(nodefull(parent)) t=1;
+	}
+	if(t)					//split with increase in level
+	{
+		leaf++;  cout<<"level increased\n";
+		count[leaf]=count[x];
+		for (i=0;i<=count[leaf];i++)			
+			std::swap(tree[leaf][i],tree[x][i]);
+		for (i=leaf-1;i>=0;i--) count[i]=-1;
+		
+		for(i=leaf,j=i-1;i>0;i--,j--)
+		{
+			k=0;
+			while(k<=count[i])
+		      {
+			newnode=create_node();
+			count[j]++;
+			tree[j][count[j]]=newnode;
+			n1=tree[i][k];
+			n2=tree[i][k+1];
+			
+			newnode->ele[0]=n1->ele[0];
+			newnode->child[0]=k;
+			newnode->ele[1]=n2->ele[0];
+			newnode->child[1]=k+1;
+			k+=2;
+			if(k<=count[i]){
+			   n1=tree[i][k];
+			   newnode->ele[2]=n1->ele[0];
+			   newnode->child[2]=k;
+			   k++;
+			   }
+		       }
+		}	  
+	}
+	else						//split without level increase ; update parents
+	{
+		cout<<"-----------";
+		i=n; j=-1; ct=0;
+		while(parent->ele[ct]!=-1)ct++;
+		k=tree[leaf][n]->ele[0];
+		while(parent->ele[++j]!=k);		//find the position of new node in parent
+		while(j<=ct)
+		{
+			 n1=tree[leaf][i];
+			 parent->ele[j]=n1->ele[0];
+			  parent->child[j]=i;
+				cout<<j<<"----"<<i<<"---";
+				i++; j++;
+		}
+		cout<<"------\n";
+		j=path[leaf-1]+1;				// to find next parent
+		while(j<=count[leaf-1])
+		{
+			parent=tree[leaf-1][j];
+			 for (x=0;parent->ele[x]!=-1;x++) (parent->child[x])++;
+			j++;
+		}		
+			
+	}
+	parent = tree[0][0];
+	for(i=0;parent->ele[i]!=-1 &&i<4;i++) { cout<<"   "<<parent->ele[i]; }
+	for(i=0;i<count[leaf];i++) 
+	{
+		n1=tree[leaf][i];
+		n1->next=tree[leaf][i+1];
+	}
+	head=tree[leaf][0];
+	
+}
+
+void bptree::display_seqset()
+{
+	node *t;
+	int k;
+	t=head;
+	cout<<"\n\nThe sequence set is:";	
+	while (t)
+	{
+		for (k=0;t->ele[k]!=-1;k++)
+			cout<<" "<<t->ele[k];
+		cout<<"\t";
+		t=t->next;
+	}
+}
+		
+int main()
+{
+	bptree bt;
+	int choice, key;
+
+	while(1)
+	{
+		cout<<"\n\n\nMain Menu\n-------------------\n1.Insert\n2.Search\n3.Display Tree\n4.Display Sequence Set\n5.Exit\n\nEnter your choice:";
+		cin>>choice;
+		switch(choice)
+		{
+		case 1:	cout<<"\nEnter the element:";
+			cin>>key;
+			bt.insert(key);
+			break;
+		case 2:cout<<"Enter the key:";
+			cin>>key;
+			bt.main_search(key);
+			break;
+		case 3: bt.display_tree();
+			break;
+		case 4: bt.display_seqset();
+			break;
+		case 5: return 0;
+		default: cout<<"\nEnter valid choice";
+		}
+	}
+}
+PROGRAM 11 -  Hashing
+
+
+A hash function is any function that can be used to map digital data of arbitrary size to digital data of fixed size. The values returned by a hash function are called hash values, hash codes, hash sums, or simply hashes. One use is a data structure called a hash table, widely used in computer software for rapid data lookup. Hash functions accelerate table or database lookup by detecting duplicated records in a large file. An example is finding similar stretches in DNA sequences. They are also useful in cryptography. Acryptographic hash function allows one to easily verify that some input data maps to a given hash value, but if the input data is unknown, it is deliberately difficult to reconstruct it (or equivalent alternatives) by knowing the stored hash value. This is used for assuring integrity of transmitted data, and is the building block for HMACs, which provide message authentication.
+Hash functions are related to (and often confused with) checksums, check digits, fingerprints, randomization functions, error-correcting codes, and ciphers. Although these concepts overlap to some extent, each has its own uses and requirements and is designed and optimized differently. The Hash Keeper database maintained by the American National Drug Intelligence Center, for instance, is more aptly described as a catalogue of file fingerprints than of hash values.
+
+Collision Resolution by Progressive Overflow
+•	How do we deal with records that cannot fit into their home address? A simple approach: Progressive Overflow or Linear Probing.
+•	If a key, k1, hashes into the same address, a1, as another key, k2, then look for the first available address, a2, following a1 and place k1 in a2. If the end of the address space is reached, then wrap around it.
+•	When searching for a key that is not in, if the address space is not full, then an empty address will be reached or the search will come back to where it began.
+
+#include<iostream>
+#include<fstream>
+#include<string>
+#include<sstream>
+using namespace std;
+
+class student
+{
+public:
+string usn,name,branch,buffer;
+int semester;
+void read();
+void pack();
+void write();
+void unpack(int);
+void search(string);
+int hash(string);
+};
+
+int student::hash(string key)
+{
+int t;
+t=(((key[7]-48)*100)+((key[8]-48)*10)+(key[9]-48))%9;
+if(t==0) return 9;
+else return t;
+}
+
+void student::read()
+{
+cout<<"\n usn:";
+cin>>usn;
+cout<<"\n name:";
+cin>>name;
+cout<<"\n branch:";
+cin>>branch;
+cout<<"\n semester:";
+cin>>semester;
+}
+
+void student::pack()
+{
+string sem,temp;
+stringstream out;
+out<<semester;
+sem=out.str();
+buffer.erase();
+temp.erase();
+temp+=usn+'|'+name+'|'+branch+'|'+sem;
+
+for(;temp.size()<100;)temp+='$';
+buffer=temp+'\n';
+cout<<"\nbuffer:"<<buffer;
+}
+
+
+void student::write()
+{
+fstream file;
+string temp;
+int count=0,pos=0;
+pos=hash(usn);
+pos--;
+pos=pos*304;
+file.open("def.txt");
+file.seekp(pos,ios::beg);
+getline(file,temp);
+file.close();
+count=temp[0]-48;
+file.open("def.txt");
+if(count<0)
+{
+file.seekp(pos,ios::beg);
+file.put('1');
+pos=pos+1;
+}
+else if(count==1)
+{
+file.seekp(pos,ios::beg);
+file.put('2');
+pos=pos+102;
+}
+else if(count==2)
+{
+file.seekp(pos,ios::beg);
+file.put('3');
+pos=pos+203;
+}
+else if(count==3)
+{
+cout<<"\n can not be inserted.....overflow\n";
+return;
+}
+cout<<"\n inserting at:"<<pos;
+file.seekp(pos,ios::beg);
+file<<buffer;
+file.close();
+}
+
+void student::unpack(int flag)
+{
+string sem;
+int ch=1,i=0;
+
+if(flag==1) i++;
+
+usn.erase();
+while(buffer[i]!='|')
+usn+=buffer[i++];
+}
+
+void student::search(string key)
+{
+fstream file;
+int flag=0,pos=0,count,i=1;
+string temp;
+pos=hash(key);
+pos--;
+pos=pos*304;
+file.open("def.txt");
+file.seekp(pos,ios::beg);
+getline(file,temp);
+count=temp[0]-48;
+file.seekp(pos,ios::beg);
+while(i<=count)
+{
+buffer.erase();
+getline(file,buffer);
+unpack(i++);
+if(key==usn)
+{
+flag=1;
+break;
+}
+}
+if(!flag) cout<<"usn not found\n";
+else
+{
+cout<<"record details are:\n";
+cout<<"USN:"<<usn<<"\nNAME:"<<name<<"\nBRANCH"<<branch<<"\nSEMESTER"<<semester;
+}
+file.close();
+}
+
+int main()
+{
+int choice;
+student s;
+string key;
+while(1)
+{
+cout<<"\n 1.ADD\n 2.SEARCH\n3.EXIT:\n";
+cin>>choice;
+switch(choice)
+{
+case 1:cout<<"enter the data:";
+s.read();
+s.pack();
+s.write();
+break;
+
+case 2:cout<<"enter the usn to be searched:";
+cin>>key;
+s.search(key);
+break;
+
+case 3:return 0;
+}
+}
+}
+
+
+
+	
+		
+
+
